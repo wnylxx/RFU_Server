@@ -38,6 +38,8 @@ const upload = multer({ storage });
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 
 // 파일 업로드 API
@@ -69,7 +71,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     io.to(project).emit('updateAvailable', {
         project,
         version,
-        url: `/updates/${project}/${version}.zip`
+        url: `/uploads/${project}/${version}.zip`
     });
 
     res.json({ message: '업로드 및 알림 성공' });
@@ -85,6 +87,10 @@ io.on('connection', socket => {
         socket.join(project); // 해당 프로젝트 room에 가입
     });
 
+    socket.on('updateResult', ({project, deviceId, success}) => {
+        console.log(`[업데이트 결과] 프로젝트: ${project}, 디바이스: ${deviceId}, 성공여부: ${success}`)
+    })
+
     socket.on('disconnect', () => {
         console.log(`[소켓 연결 종료] id: ${socket.id}`);
     });
@@ -93,4 +99,28 @@ io.on('connection', socket => {
 
 server.listen(PORT, () => {
     console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
+});
+
+
+
+// 테스트 용
+
+app.post('/api/trigger-update', (req, res) => {
+    const { project, version } = req.body;
+
+    if (!project || !version) {
+        return res.status(400).json({ error: 'project와 version을 모두 입력하세요.' });
+    }
+
+    const url = `/uploads/${project}/${version}.zip`;
+
+    io.to(project).emit("updateAvailable", {
+        project,
+        version,
+        url
+    });
+
+    console.log(`🔔 ${project} 프로젝트에 updateAvailable emit 완료 (v${version})`);
+
+    res.status(200).json({ message: 'emit 성공', sent: { project, version, url } });
 });
