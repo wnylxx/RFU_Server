@@ -23,7 +23,7 @@ const PORT = process.env.PORT
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const project = req.body.project;
-        // const version = req.body.version;
+        // const version = req.body.version; 
         const dir = path.join(__dirname, 'uploads', project);
         fs.mkdirSync(dir, { recursive: true });                     // 디렉토리가 없으면 재귀적으로 생성하겠다. 
         cb(null, dir);                                              // 이 경로로 파일을 저장한다.
@@ -38,7 +38,7 @@ const upload = multer({ storage });
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // 보안 처리 필요
 
 
 
