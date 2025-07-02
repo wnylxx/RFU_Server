@@ -151,3 +151,8 @@ app.post('/api/trigger-update', (req, res) => {
 
     res.status(200).json({ message: 'emit 성공', sent: { project, version, url } });
 });
+
+
+// 기능별로 나누기
+// 업데이트 프로그램에 업데이트 성공 유무 보내기
+// 로그 저장하기
