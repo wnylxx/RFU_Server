@@ -24,19 +24,25 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // 보안 처리 필요
 
+
+// 소켓 등록
+require('./sockets/ioHandler')(io);
+
+
+// io 객체를 express에 넘겨줌
+app.set('socketio', io);
+
+
 // 라우트
 const apiRoutes = require('./routes/api')(io);
 app.use('/api', apiRoutes);
 
-// 소켓 핸들러
-require('./sockets/ioHandler')(io);
 
 // 서버 실행
 const PORT = process.env.PORT
 server.listen(PORT, () => {
     console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
 });
-
 
 
 
