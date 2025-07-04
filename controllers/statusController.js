@@ -4,6 +4,7 @@ function groupByProject(devices) {
     const result = {};
     for (const [deviceId, { socketId, project }] of Object.entries(devices)) {
         if (!result[project]) result[project] = {};
+        result[project][deviceId] = { socketId };
     }
 
     return result;
@@ -11,13 +12,16 @@ function groupByProject(devices) {
 
 exports.getConnectedDevices = (req, res) => {
     const io = req.app.get('socketio');
-    const devices = io.connectedDevice || {};
+    const devices = io.connectedDevices || {};
+    
+    console.log("device:", devices);
+
     const grouped = groupByProject(devices);
-    res.join({ project: grouped });
+    res.json({ projects: grouped });
 };
 
 exports.getUpdateSummary = (req, res) => {
-    const io = req.app.get('socektio');
+    const io = req.app.get('socketio');
     const results = io.updateResults || {};
 
     const project = req.query.project;
@@ -30,7 +34,7 @@ exports.getUpdateSummary = (req, res) => {
     const successList = filtered.filter(([_, r]) => r.success).map(([id]) => id);
     const failList = filtered.filter(([_, r]) => !r.success).map(([id]) => id);
 
-    res.join({
+    res.json({
         total,
         success: successList.length,
         failure: failList.length,

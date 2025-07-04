@@ -17,6 +17,8 @@ module.exports = (io) => {
                 socketId: socket.id,
                 project
             };
+
+            console.log(connectedDevices);
         });
 
         socket.on('updateResult', ({ project, deviceId, success }) => {
