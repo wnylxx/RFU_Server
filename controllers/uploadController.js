@@ -48,6 +48,6 @@ exports.getVersion = (req, res) => {
         return res.json({ message: '버전 정보가 없습니다.' });
     }
 
-    res.json({ verison });
+    res.json({ version });
 };
 
