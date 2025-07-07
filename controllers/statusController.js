@@ -1,5 +1,7 @@
 // statusController
 
+
+// 변환함수 (내부 deviceId 기준 -> 외부 project 기준)
 function groupByProject(devices) {
     const result = {};
     for (const [deviceId, { socketId, project }] of Object.entries(devices)) {
