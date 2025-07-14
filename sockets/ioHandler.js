@@ -40,6 +40,16 @@ module.exports = (io) => {
             }
         });
 
+
+        socket.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error('Port is already in use');
+                process.exit(1);
+            } else {
+                throw err;
+            }
+        });
+
         // Express에서 접근 가능 하도록 저장
         io.connectedDevices = connectedDevices;
         io.updateResults = updateResults;
