@@ -2,14 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-// const multer = require('multer');
 const path = require('path');
-// const fs = require('fs');
 const cors = require('cors');
 
 
 const app = express();
 const server = http.createServer(app);
+
+// 소켓 초기화
 const io = new Server(server, {
     cors: {
         origin: '*',
@@ -17,6 +17,8 @@ const io = new Server(server, {
     },
 });
 
+// 소켓 핸들러에서 app 접근 가능하도록 연결
+io.httpServer._app = app;
 
 
 // 미들 웨어

@@ -23,23 +23,41 @@ exports.getConnectedDevices = (req, res) => {
 };
 
 exports.getUpdateSummary = (req, res) => {
-    const io = req.app.get('socketio');
-    const results = io.updateResults || {};
+    const { project } = req.query;
+    if (!project) return res.status(400).json({ message: "project required" });
 
-    const project = req.query.project;
-    if (!project) return res.status(400).json({ error: 'Project name is required' });
+    const connected = req.app.get("connectedDevices"); // deviceId -> { project, socketId }
+    const updateResults = req.app.get("updateResults"); // deviceId -> { success, project }
 
-    const filtered = Object.entries(results)
-        .filter(([_, r]) => r.project === project);
+    // 이 프로젝트로 명령 보낸 대상자
+    const targetDevices = Object.entries(connected)
+        .filter(([_, info]) => info.project === project)
+        .map(([deviceId]) => deviceId);
 
-    const total = filtered.length;
-    const successList = filtered.filter(([_, r]) => r.success).map(([id]) => id);
-    const failList = filtered.filter(([_, r]) => !r.success).map(([id]) => id);
+    const total = targetDevices.length;
 
-    res.json({
+    // 현재까지 받은 result
+    const received = targetDevices.filter(id => updateResults[id]?.project === project);
+    const receivedCount = received.length;
+
+    // 아직 다 안 옴 → 진행중 상태
+    if (receivedCount < total) {
+        return res.json({
+            status: "progress",
+            total,
+            received: receivedCount
+        });
+    }
+
+    // 완료 상태 계산
+    const failedDevices = received.filter(id => updateResults[id]?.success === false);
+    const successCount = receivedCount - failedDevices.length;
+
+    return res.json({
+        status: "done",
         total,
-        success: successList.length,
-        failure: failList.length,
-        failedDevices: failList
+        success: successCount,
+        failure: failedDevices.length,
+        failedDevices
     });
 };
