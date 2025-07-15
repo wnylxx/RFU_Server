@@ -3,6 +3,8 @@ const fs = require('fs');
 const { version } = require('os');
 const versionPath = path.join(__dirname, '..', 'version.json')
 
+const { emitCommandToDevices  } = require('./deviceManager');
+
 function readVersionData() {
     return fs.existsSync(versionPath) ? JSON.parse(fs.readFileSync(versionPath, 'utf-8')) : {};
 }
@@ -12,7 +14,7 @@ function writeVersionData(data) {
     fs.writeFileSync(versionPath, JSON.stringify(data, null, 2));
 }
 
-exports.handleUpload = (io) => (req, res) => {
+exports.handleUpload = (io) => async (req, res) => {
     const { project, version } = req.body;
 
     if (!project || !version || !req.file) {
@@ -25,13 +27,23 @@ exports.handleUpload = (io) => (req, res) => {
     versionData[project] = version;
     writeVersionData(versionData);
 
-    io.to(project).emit('updateAvailable', {
+    const url = `/uploads/${project}/${version}.zip`;
+
+
+    // emit 및 결과 대기
+    const results = await emitCommandToDevices({
+        io,
+        commandType: 'updateAvailable',
         project,
         version,
-        url: `/uploads/${project}/${version}.zip`
+        url
     });
 
-    res.json({ message: '업로드 및 알림 성공' });
+    res.json({
+        message: '업로드 및 업데이트 지시 완료',
+        resultCount: results.length,
+        results // deviceId, success, project
+    });
 };
 
 exports.getVersion = (req, res) => {
