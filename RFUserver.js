@@ -9,6 +9,10 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
+const connectedDevices = {};
+const updateResults = {};
+
+
 // 소켓 초기화
 const io = new Server(server, {
     cors: {
@@ -28,12 +32,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // 보안 
 
 
 // 소켓 등록
-require('./sockets/ioHandler')(io);
+app.set('connectedDevices', connectedDevices);
+app.set('updateResults', updateResults);
+
+require('./sockets/ioHandler')(io, app); // io와 app 둘다 넘긴다.
 
 
 // io 객체를 express에 넘겨줌
 app.set('socketio', io);
-
 
 // 라우트
 const apiRoutes = require('./routes/api')(io);

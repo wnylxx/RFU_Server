@@ -21,9 +21,10 @@ const waitForAllResults = (deviceIds, updateResults, timeout = 30000) => {
 };
 
 
-const emitCommandToDevices = async ({ io, commandType, project, version, url }) => {
-    const connected = io.connectedDevices;
-    const updateResults = io.updateResults;
+const emitCommandToDevices = async ({ io, app, commandType, project, version, url }) => {
+    const connected = app.get('connectedDevices');
+    console.log("✅ emit Command To Device - connectedDevices:", connected);
+    const updateResults = app.get('updateResults');
 
     const targetDevices = Object.entries(connected)
         .filter(([_, { project: p }]) => p === project)

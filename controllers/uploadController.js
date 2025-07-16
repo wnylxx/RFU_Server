@@ -29,10 +29,12 @@ exports.handleUpload = (io) => async (req, res) => {
 
     const url = `/uploads/${project}/${version}.zip`;
 
+    const app = req.app;
 
     // emit 및 결과 대기
     const results = await emitCommandToDevices({
         io,
+        app,
         commandType: 'updateAvailable',
         project,
         version,

@@ -1,11 +1,15 @@
 // ioHandler
 
 // 내부 저장용 객체
-const connectedDevices = {}; // deviceID -> { socketId, project }
-const updateResults = {};    // deviceId -> { success, project }
+// const connectedDevices = {}; // deviceID -> { socketId, project }
+// const updateResults = {};    // deviceId -> { success, project }
 
 
-module.exports = (io) => {
+module.exports = (io, app) => {
+    const connectedDevices = app.get('connectedDevices');
+    const updateResults = app.get('updateResults');
+
+
     io.on('connection', socket => {
         console.log(`[소켓 연결됨] id: ${socket.id}`);
 
@@ -70,5 +74,8 @@ module.exports = (io) => {
         // // Express에서 접근 가능 하도록 저장
         // io.connectedDevices = connectedDevices;
         // io.updateResults = updateResults;
+
+        app.set('connectedDevices', connectedDevices);
+        app.set('updateResults', updateResults);
     });
 };
