@@ -13,9 +13,11 @@ function groupByProject(devices) {
 }
 
 exports.getConnectedDevices = (req, res) => {
-    const io = req.app.get('socketio');
-    const devices = io.connectedDevices || {};
-    
+    // const io = req.app.get('socketio');
+    // const devices = io.connectedDevices || {};
+    const devices = req.app.get('connectedDevices') || {};
+
+
     console.log("device:", devices);
 
     const grouped = groupByProject(devices);
