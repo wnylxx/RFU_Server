@@ -4,6 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const cors = require('cors');
+const logWithTime = require('./utils/logWithTime');
 
 
 const app = express();
@@ -49,7 +50,7 @@ app.use('/api', apiRoutes);
 // 서버 실행
 const PORT = process.env.PORT
 server.listen(PORT, () => {
-    console.log(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
+    logWithTime(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
 });
 
 
