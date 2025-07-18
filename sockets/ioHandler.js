@@ -5,6 +5,7 @@
 // const updateResults = {};    // deviceId -> { success, project }
 const fs = require('fs');
 const path = require('path');
+const logWithTime = require('./utils/logWithTime');
 
 module.exports = (io, app) => {
     const connectedDevices = app.get('connectedDevices');
@@ -12,7 +13,7 @@ module.exports = (io, app) => {
 
 
     io.on('connection', socket => {
-        console.log(`[소켓 연결됨] id: ${socket.id}`);
+        logWithTime(`[소켓 연결됨] id: ${socket.id}`);
 
         const app = io.httpServer._app; // Express 앱 참조
 
@@ -23,7 +24,7 @@ module.exports = (io, app) => {
 
         // 장치 등록
         socket.on('registerProject', ({ project, deviceId }) => {
-            console.log(`[등록] ${deviceId} => ${project}`);
+            logWithTime(`[등록] ${deviceId} => ${project}`);
             socket.join(project); // 해당 프로젝트 room에 가입
 
             connectedDevices[deviceId] = {
@@ -31,14 +32,14 @@ module.exports = (io, app) => {
                 project
             };
 
-            console.log(connectedDevices);
+            logWithTime(connectedDevices);
 
             // Express 앱에 상태 저장
             app.set('connectedDevices', connectedDevices);
         });
 
         socket.on('updateResult', ({ project, deviceId, success }) => {
-            console.log(`[업데이트 결과] 프로젝트: ${project}, 디바이스: ${deviceId}, 성공여부: ${success}`);
+            logWithTime(`[업데이트 결과] 프로젝트: ${project}, 디바이스: ${deviceId}, 성공여부: ${success}`);
 
             const updateResults = app.get('updateResults') || {};
             const targetDevices = app.get(`projectTargetDevices_${project}`) || [];
@@ -62,7 +63,7 @@ module.exports = (io, app) => {
 
         // 소켓 연결 종료
         socket.on('disconnect', () => {
-            console.log(`[소켓 연결 종료] id: ${socket.id}`);
+            logWithTime(`[소켓 연결 종료] id: ${socket.id}`);
 
             const disconnectedId = Object.keys(connectedDevices).find(
                 id => connectedDevices[id].socketId === socket.id

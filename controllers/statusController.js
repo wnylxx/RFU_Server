@@ -1,5 +1,6 @@
 // statusController
 
+const logWithTime = require('./utils/logWithTime');
 
 // 변환함수 (내부 deviceId 기준 -> 외부 project 기준)
 function groupByProject(devices) {
@@ -18,7 +19,7 @@ exports.getConnectedDevices = (req, res) => {
     const devices = req.app.get('connectedDevices') || {};
 
 
-    console.log("device:", devices);
+    logWithTime("Connected device:", devices);
 
     const grouped = groupByProject(devices);
     res.json({ projects: grouped });
@@ -28,7 +29,7 @@ exports.getUpdateSummary = (req, res) => {
     const { project } = req.query;
     if (!project) return res.status(400).json({ message: "project required" });
 
-    const connected = req.app.get("connectedDevices"); // deviceId -> { project, socketId }
+    // const connected = req.app.get("connectedDevices"); // deviceId -> { project, socketId }
     const updateResults = req.app.get("updateResults"); // deviceId -> { success, project }
     // const targetDevices = req.app.get(`projectTargetDevices_${project}`);
 
@@ -40,7 +41,7 @@ exports.getUpdateSummary = (req, res) => {
 
 
     const targetDevices = req.app.get(`projectTargetDevices_${project}`) || [];
-    console.log("getUpdateSummary-targetDevice :", targetDevices);
+    logWithTime("getUpdateSummary-targetDevice :", targetDevices);
 
     const total = targetDevices.length;
 

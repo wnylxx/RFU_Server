@@ -1,6 +1,8 @@
 // deviceManager.js
 
 // app.set(`projectTargetDevices_${project}`, targetDevices);
+const logWithTime = require('./utils/logWithTime');
+
 
 const waitForAllResults = (deviceIds, updateResults, timeout = 30000) => {
     return new Promise((resolve) => {
@@ -25,7 +27,7 @@ const waitForAllResults = (deviceIds, updateResults, timeout = 30000) => {
 
 const emitCommandToDevices = async ({ io, app, commandType, project, version, url }) => {
     const connected = app.get('connectedDevices');
-    console.log("✅ emit Command To Device - connectedDevices:", connected);
+    logWithTime("emit Command To Device - connectedDevices:", connected);
     const updateResults = app.get('updateResults');
 
 
@@ -46,7 +48,7 @@ const emitCommandToDevices = async ({ io, app, commandType, project, version, ur
             return null;
         }).filter(Boolean);
 
-    console.log(`[명령 전송] ${commandType}: ${targetDevices.length}개 디바이스`);
+    logWithTime(`[명령 전송] ${commandType}: ${targetDevices.length}개 디바이스 ${targetDevices}`);
 
     // 저장
     app.set(`projectTargetDevices_${project}`, targetDevices);

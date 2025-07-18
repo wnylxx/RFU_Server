@@ -4,6 +4,8 @@ const { version } = require('os');
 const versionPath = path.join(__dirname, '..', 'version.json')
 
 const { emitCommandToDevices  } = require('./deviceManager');
+const logWithTime = require('./utils/logWithTime');
+
 
 function readVersionData() {
     return fs.existsSync(versionPath) ? JSON.parse(fs.readFileSync(versionPath, 'utf-8')) : {};
@@ -21,7 +23,7 @@ exports.handleUpload = (io) => async (req, res) => {
         return res.status(400).json({ message: 'Missing parameters or file' });
     }
 
-    console.log(`[업로드] ${project} - ${version} 업로드됨`);
+    logWithTime(`[업로드] ${project} - ${version} 업로드됨`);
 
     const versionData = readVersionData();
     versionData[project] = version;
