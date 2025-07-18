@@ -3,7 +3,8 @@
 // 내부 저장용 객체
 // const connectedDevices = {}; // deviceID -> { socketId, project }
 // const updateResults = {};    // deviceId -> { success, project }
-
+const fs = require('fs');
+const path = require('path');
 
 module.exports = (io, app) => {
     const connectedDevices = app.get('connectedDevices');
@@ -19,7 +20,7 @@ module.exports = (io, app) => {
             console.error('[오류] Express 앱을 찾을 수 없습니다.');
             return;
         }
-    
+
         // 장치 등록
         socket.on('registerProject', ({ project, deviceId }) => {
             console.log(`[등록] ${deviceId} => ${project}`);
@@ -39,6 +40,16 @@ module.exports = (io, app) => {
         socket.on('updateResult', ({ project, deviceId, success }) => {
             console.log(`[업데이트 결과] 프로젝트: ${project}, 디바이스: ${deviceId}, 성공여부: ${success}`);
 
+            const updateResults = app.get('updateResults') || {};
+            const targetDevices = app.get(`projectTargetDevices_${project}`) || [];
+
+            // emit으로 명령을 받은 대상이 아닌 경우 → 무시
+            if (!targetDevices.includes(deviceId)) {
+                console.warn(`[경고] updateResult 받았지만 대상 디바이스가 아님: ${deviceId}`);
+                return;
+            }
+
+
             updateResults[deviceId] = {
                 success,
                 project
@@ -46,6 +57,7 @@ module.exports = (io, app) => {
 
             // Express 앱에 상태 저장
             app.set('updateResults', updateResults);
+
         });
 
         // 소켓 연결 종료

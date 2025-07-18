@@ -1,7 +1,6 @@
 // utils/logWithTime.js
 
 
-
 function logWithTime(...args) {
   const now = new Date();
   const year = now.getFullYear();

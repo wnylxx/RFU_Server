@@ -1,5 +1,7 @@
 // deviceManager.js
 
+// app.set(`projectTargetDevices_${project}`, targetDevices);
+
 const waitForAllResults = (deviceIds, updateResults, timeout = 30000) => {
     return new Promise((resolve) => {
         const start = Date.now();
@@ -26,6 +28,14 @@ const emitCommandToDevices = async ({ io, app, commandType, project, version, ur
     console.log("✅ emit Command To Device - connectedDevices:", connected);
     const updateResults = app.get('updateResults');
 
+
+    // 이전의 업데이트 결과 제거
+    Object.keys(updateResults).forEach(deviceId => {
+        if (updateResults[deviceId]?.project === project) {
+            delete updateResults[deviceId];
+        }
+    });
+
     const targetDevices = Object.entries(connected)
         .filter(([_, { project: p }]) => p === project)
         .map(([deviceId, { socketId }]) => {
@@ -37,6 +47,9 @@ const emitCommandToDevices = async ({ io, app, commandType, project, version, ur
         }).filter(Boolean);
 
     console.log(`[명령 전송] ${commandType}: ${targetDevices.length}개 디바이스`);
+
+    // 저장
+    app.set(`projectTargetDevices_${project}`, targetDevices);
 
     return await waitForAllResults(targetDevices, updateResults);
 };

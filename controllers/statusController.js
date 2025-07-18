@@ -30,17 +30,24 @@ exports.getUpdateSummary = (req, res) => {
 
     const connected = req.app.get("connectedDevices"); // deviceId -> { project, socketId }
     const updateResults = req.app.get("updateResults"); // deviceId -> { success, project }
+    // const targetDevices = req.app.get(`projectTargetDevices_${project}`);
+
 
     // 이 프로젝트로 명령 보낸 대상자
-    const targetDevices = Object.entries(connected)
-        .filter(([_, info]) => info.project === project)
-        .map(([deviceId]) => deviceId);
+    // const targetDevices = Object.entries(connected)
+    //     .filter(([_, info]) => info.project === project)
+    //     .map(([deviceId]) => deviceId);
+
+
+    const targetDevices = req.app.get(`projectTargetDevices_${project}`) || [];
+    console.log("getUpdateSummary-targetDevice :", targetDevices);
 
     const total = targetDevices.length;
 
     // 현재까지 받은 result
     const received = targetDevices.filter(id => updateResults[id]?.project === project);
     const receivedCount = received.length;
+
 
     // 아직 다 안 옴 → 진행중 상태
     if (receivedCount < total) {
