@@ -1,7 +1,7 @@
 // deviceManager.js
 
 // app.set(`projectTargetDevices_${project}`, targetDevices);
-const logWithTime = require('./utils/logWithTime');
+const logWithTime = require('../utils/logWithTime');
 
 
 const waitForAllResults = (deviceIds, updateResults, timeout = 30000) => {

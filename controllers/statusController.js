@@ -1,6 +1,6 @@
 // statusController
 
-const logWithTime = require('./utils/logWithTime');
+const logWithTime = require('../utils/logWithTime');
 
 // 변환함수 (내부 deviceId 기준 -> 외부 project 기준)
 function groupByProject(devices) {

@@ -5,7 +5,7 @@
 // const updateResults = {};    // deviceId -> { success, project }
 const fs = require('fs');
 const path = require('path');
-const logWithTime = require('./utils/logWithTime');
+const logWithTime = require('../utils/logWithTime');
 
 module.exports = (io, app) => {
     const connectedDevices = app.get('connectedDevices');

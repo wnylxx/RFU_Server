@@ -4,7 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const cors = require('cors');
-const logWithTime = require('./utils/logWithTime');
+const logWithTime = require('./utils/logWithTime.js')
 
 
 const app = express();

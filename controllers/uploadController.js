@@ -4,7 +4,7 @@ const { version } = require('os');
 const versionPath = path.join(__dirname, '..', 'version.json')
 
 const { emitCommandToDevices  } = require('./deviceManager');
-const logWithTime = require('./utils/logWithTime');
+const logWithTime = require('../utils/logWithTime');
 
 
 function readVersionData() {
