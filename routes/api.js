@@ -19,7 +19,10 @@ module.exports = (io) => {
     // 업데이트 결과 요약
     router.get('/update-summary', statusController.getUpdateSummary);
 
-
+    router.post("/backup-only", updateController.handleBackupOnly(io));
+    router.post("/upload-only", updateController.handleUploadOnly(io));
+    router.post("/rollback-only", updateController.handleRollbackOnly(io));
+    
 
     return router;
 };
