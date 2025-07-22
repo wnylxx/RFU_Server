@@ -5,6 +5,7 @@ const router = express.Router();
 const upload = require('../middlewares/upload');
 const uploadController = require('../controllers/uploadController');
 const statusController = require('../controllers/statusController');
+const updateController = require('../controllers/updateController');
 
 
 module.exports = (io) => {
@@ -17,6 +18,8 @@ module.exports = (io) => {
 
     // 업데이트 결과 요약
     router.get('/update-summary', statusController.getUpdateSummary);
+
+
 
     return router;
 };
