@@ -1,15 +1,13 @@
 // ioHandler
-
-// 내부 저장용 객체
-// const connectedDevices = {}; // deviceID -> { socketId, project }
-// const updateResults = {};    // deviceId -> { success, project }
 const fs = require('fs');
 const path = require('path');
 const logWithTime = require('../utils/logWithTime');
 
 module.exports = (io, app) => {
-    const connectedDevices = app.get('connectedDevices');
-    const updateResults = app.get('updateResults');
+    /* 
+        연결된 장치 관리 deviceID -> { socketId, project, version, lastSeen, isConnected, updateHistory}
+    */
+    const connectedDevices = app.get('connectedDevices') || {};
 
 
     io.on('connection', socket => {
@@ -24,13 +22,26 @@ module.exports = (io, app) => {
 
         // 장치 등록
         socket.on('registerProject', ({ project, deviceId }) => {
-            logWithTime(`[등록] ${deviceId} => ${project}`);
+            logWithTime(`[등록] ${deviceId} => ${project} (socketId: ${socket.id})`);
             socket.join(project); // 해당 프로젝트 room에 가입
 
-            connectedDevices[deviceId] = {
-                socketId: socket.id,
-                project
-            };
+            // 기존에 deviceId 정보가 있을 경우
+            if (connectedDevices[deviceId]) {
+                connectedDevices[deviceId].socketId = socket.id;
+                connectedDevices[deviceId].isConnected = true;
+                connectedDevices[deviceId].lastSeen = new Date();
+                logWithTime(`[재연결] Device_ID: ${deviceId}`);
+            } else {
+                // 새롭게 등록
+                connectedDevices[deviceId] = {
+                    socketId: socket.id,
+                    project,
+                    version: "0.0.0",
+                    lastSeen: new Date(),
+                    isConnected: true,
+                    updateHistory: [],  // 업데이트 이력 배열
+                };
+            }
 
             logWithTime(connectedDevices);
 
@@ -38,7 +49,22 @@ module.exports = (io, app) => {
             app.set('connectedDevices', connectedDevices);
         });
 
-        socket.on('updateResult', ({ project, deviceId, success }) => {
+
+        // Rpi의 버전 정보 수신
+        socket.on('versionReport', ({ project, deviceId, version }) => {
+            logWithTime(`[버전 정보 수신] ${deviceId} => v${version} (프로젝트: ${project})`);
+            if (connectedDevices[deviceId]) {
+                connectedDevices[deviceId].version = version;
+                connectedDevices[deviceId].lastSeen = new Date();
+                connectedDevices[deviceId].isConnected = true;
+                
+                // Express 앱에 상태 저장
+                app.set('connectedDevices', connectedDevices);
+            }
+        });
+
+
+        socket.on('updateResult', ({ project, deviceId, success, version, error, mode }) => {
             logWithTime(`[업데이트 결과] 프로젝트: ${project}, 디바이스: ${deviceId}, 성공여부: ${success}`);
 
             const updateResults = app.get('updateResults') || {};
@@ -50,16 +76,37 @@ module.exports = (io, app) => {
                 return;
             }
 
-
-            updateResults[deviceId] = {
+            const updateRecord = {
                 success,
-                project
+                project,
+                version,
+                error,
+                mode,
+                timestamp: new Date(),
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
             };
 
+
+            // 연결 상태 업데이트 및 이력 저장
+            if (connectedDevices[deviceId]) {
+                connectedDevices[deviceId].lastSeen = new Date();
+                connectedDevices[deviceId].isConnected = true;
+                if (version) {
+                    connectedDevices[deviceId].version = version;
+                }
+                
+                // 업데이트 이력 추가 (최대 10개 유지)
+                connectedDevices[deviceId].updateHistory.unshift(updateRecord);
+                if (connectedDevices[deviceId].updateHistory.length > 10) {
+                    connectedDevices[deviceId].updateHistory = connectedDevices[deviceId].updateHistory.slice(0, 10);
+                }
+            }
+
             // Express 앱에 상태 저장
-            app.set('updateResults', updateResults);
+            app.set('connectedDevices', connectedDevices);
 
         });
+
 
         // 소켓 연결 종료
         socket.on('disconnect', () => {
@@ -68,9 +115,37 @@ module.exports = (io, app) => {
             const disconnectedId = Object.keys(connectedDevices).find(
                 id => connectedDevices[id].socketId === socket.id
             );
+
             if (disconnectedId) {
-                delete connectedDevices[disconnectedId];
+                logWithTime(`[디바이스 연결 끊김] Device_ID: ${disconnectedId}`);
+
+                // 업데이트 명령 후 응답이 없는 경우
+                const device = connectedDevices[disconnectedId];
+                if (device.updateHistory.length === 0 || device.updateHistory[0]?.success !== undefined) {
+                    // 업데이트 중이었는데 연결이 끊어진 경우
+                    logWithTime(`[경고] 업데이트 중 연결 끊김 - Device_ID: ${disconnectedId}`);
+                    
+                    // 실패로 처리
+                    const failedUpdate = {
+                        success: false,
+                        project: device.project,
+                        version: "알 수 없음",
+                        error: "업데이트 중 연결 끊어짐",
+                        mode: "unknown",
+                        timestamp: new Date(),
+                        id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+                    };
+                    
+                    device.updateHistory.unshift(failedUpdate);
+                }
+
+                // 연결 정보는 유지하되 연결 상태만 false로 설정
+                connectedDevices[disconnectedId].isConnected = false;
+                connectedDevices[disconnectedId].socketId = null;
                 app.set('connectedDevices', connectedDevices);
+
+
+                logWithTime(connectedDevices);
             }
         });
 
@@ -84,11 +159,7 @@ module.exports = (io, app) => {
             }
         });
 
-        // // Express에서 접근 가능 하도록 저장
-        // io.connectedDevices = connectedDevices;
-        // io.updateResults = updateResults;
 
         app.set('connectedDevices', connectedDevices);
-        app.set('updateResults', updateResults);
     });
 };

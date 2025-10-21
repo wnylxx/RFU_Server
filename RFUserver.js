@@ -49,7 +49,7 @@ app.use('/api', apiRoutes);
 
 // 서버 실행
 const PORT = process.env.PORT
-server.listen(PORT, () => {
+server.listen(PORT,'0.0.0.0', () => {
     logWithTime(`서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
 });
 
