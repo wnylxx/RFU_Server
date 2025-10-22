@@ -33,20 +33,29 @@ exports.handleUpload = (io) => async (req, res) => {
 
     const app = req.app;
 
+    // 이전 업데이트 상태 초기화
+    const connectedDevices = app.get('connectedDevices') || {};
+    Object.keys(connectedDevices).forEach(deviceId => {
+        if (connectedDevices[deviceId].project === project) {
+            connectedDevices[deviceId].lastUpdateStatus = null;
+        }
+    });
+    app.set('connectedDevices', connectedDevices);
+
     // emit 및 결과 대기
     const results = await emitCommandToDevices({
         io,
         app,
-        commandType: 'updateAvailable',
+        commandType: 'updateFull',
         project,
         version,
         url
     });
 
     res.json({
-        message: '업로드 및 업데이트 지시 완료',
+        message: 'updateFull 명령 전송 완료', // 변경
         resultCount: results.length,
-        results // deviceId, success, project
+        results
     });
 };
 

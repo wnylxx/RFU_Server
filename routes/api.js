@@ -19,9 +19,11 @@ module.exports = (io) => {
     // 업데이트 결과 요약
     router.get('/update-summary', statusController.getUpdateSummary);
 
-    router.post("/backup-only", updateController.handleBackupOnly(io));
-    router.post("/upload-only", updateController.handleUploadOnly(io));
-    router.post("/rollback-only", updateController.handleRollbackOnly(io));
+    // 프로젝트별 장비 상태 목록
+    router.get('/devices/:project', statusController.getDeviceStatus);
+
+    // 롤백
+    router.post('/rollback', updateController.handleRollbackOnly(io));
     
 
     return router;

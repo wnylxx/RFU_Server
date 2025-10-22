@@ -1,6 +1,49 @@
 // statusController
 
 const logWithTime = require('../utils/logWithTime');
+const { getDeviceIds } = require('../utils/db');
+
+
+exports.getDeviceStatus = async (req, res) => { 
+    const {project} = req.params;
+
+    // 현재는 CU 프로젝트의 Device만 불러오기
+    if (project !== "CU") {
+        return res.status(400).json({ message: `Project '${project}' is not supported for this operation.`})
+    }
+
+    try {
+        const allDeviceIds = await getDeviceIds(); 
+        const connectedDevices = req.app.get('connectedDevices') || {};
+
+        const deviceStatusList = allDeviceIds.map(deviceId => {
+            const device = connectedDevices[deviceId];
+            if (device) {
+                // 연결되어 있는 경우
+                return {
+                    deviceId,
+                    isConnected: device.isConnected,
+                    lastUpdateStatus: device.lastUpdateStatus === undefined ? null : device.lastUpdateStatus,
+                    version: device.version
+                };
+            } else {
+                // 장비가 연결되지 않은 경우
+                return {
+                    deviceId,
+                    isConnected: false,
+                    lastUpdateStatus: null,
+                    version: null
+                };
+            }
+        });
+
+        res.json(deviceStatusList);
+    } catch (err) {
+        logWithTime('Error in getDeviceStatus:', error);
+        res.status(500).json({ message: 'An error occurred while fetching device statuses.' });
+    }
+}
+
 
 // 변환함수 (내부 deviceId 기준 -> 외부 project 기준)
 function groupByProject(devices) {

@@ -67,15 +67,6 @@ module.exports = (io, app) => {
         socket.on('updateResult', ({ project, deviceId, success, version, error, mode }) => {
             logWithTime(`[업데이트 결과] 프로젝트: ${project}, 디바이스: ${deviceId}, 성공여부: ${success}`);
 
-            const updateResults = app.get('updateResults') || {};
-            const targetDevices = app.get(`projectTargetDevices_${project}`) || [];
-
-            // emit으로 명령을 받은 대상이 아닌 경우 → 무시
-            if (!targetDevices.includes(deviceId)) {
-                console.warn(`[경고] updateResult 받았지만 대상 디바이스가 아님: ${deviceId}`);
-                return;
-            }
-
             const updateRecord = {
                 success,
                 project,
@@ -96,6 +87,7 @@ module.exports = (io, app) => {
                 }
                 
                 // 업데이트 이력 추가 (최대 10개 유지)
+                connectedDevices[deviceId].lastUpdateStatus = success;
                 connectedDevices[deviceId].updateHistory.unshift(updateRecord);
                 if (connectedDevices[deviceId].updateHistory.length > 10) {
                     connectedDevices[deviceId].updateHistory = connectedDevices[deviceId].updateHistory.slice(0, 10);
@@ -118,26 +110,6 @@ module.exports = (io, app) => {
 
             if (disconnectedId) {
                 logWithTime(`[디바이스 연결 끊김] Device_ID: ${disconnectedId}`);
-
-                // 업데이트 명령 후 응답이 없는 경우
-                const device = connectedDevices[disconnectedId];
-                if (device.updateHistory.length === 0 || device.updateHistory[0]?.success !== undefined) {
-                    // 업데이트 중이었는데 연결이 끊어진 경우
-                    logWithTime(`[경고] 업데이트 중 연결 끊김 - Device_ID: ${disconnectedId}`);
-                    
-                    // 실패로 처리
-                    const failedUpdate = {
-                        success: false,
-                        project: device.project,
-                        version: "알 수 없음",
-                        error: "업데이트 중 연결 끊어짐",
-                        mode: "unknown",
-                        timestamp: new Date(),
-                        id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-                    };
-                    
-                    device.updateHistory.unshift(failedUpdate);
-                }
 
                 // 연결 정보는 유지하되 연결 상태만 false로 설정
                 connectedDevices[disconnectedId].isConnected = false;
